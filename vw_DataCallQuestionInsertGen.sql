@@ -1,27 +1,13 @@
-USE [Cyberscope123]
-GO
-
-/****** Object:  View [dbo].[vw_DataCallQuestionInsertGen]    Script Date: 8/29/2019 4:07:54 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
 /* 
 -- =============================================
--- Author:		t.kopp
+-- Author:		T.KOPP
 -- Create date: 08-28-19
 -- Description:	generate insert scripts for datacall
 -- =============================================
---USAGE
+UNITTEST
 
 SELECT * FROM vw_DataCallQuestionInsertGen   
-
---housekeeping
-
-DROP VIEW vw_DataCallQuestionInsertGen  
-
+ 
 */
 
 
