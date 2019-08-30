@@ -1,11 +1,17 @@
 /*	 
---USAGE	   
+
+ 
+-- =============================================
+-- Author:		T.KOPP
+-- Create date: 08-28-19
+-- Description:	return formatted datacall questions by group
+-- ============================================= 
+UNITTEST  
+
 
 SELECT dbo.fn_FMTQuestionInsert('[PKQ]', 1001, 5300) 
 SELECT dbo.fn_FMTQuestionInsert('[SORT] sajkdfsjakd [PKQ]', 1001, 5300)    
-   
---UTIL
-DROP FUNCTION fn_FMTQuestionInsert
+ 
 	  
 */
 
@@ -33,7 +39,7 @@ BEGIN
 
  
 	DECLARE @STATEMENT_2 NVARCHAR(MAX) 
-	SET @STATEMENT_2 = REPLACE(@STATEMENT_1, '[SORT]', @STR_ROWCOUNT)	
+	SET @STATEMENT_2 = REPLACE(@STATEMENT_1, '[SORT]', @STR_ROWCOUNT - 1)	
  	 										    
 	RETURN  @STATEMENT_2
 END	  

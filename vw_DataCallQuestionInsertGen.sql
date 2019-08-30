@@ -25,7 +25,7 @@ DROP VIEW vw_DataCallQuestionInsertGen
 */
 
 
-CREATE  VIEW [dbo].[vw_DataCallQuestionInsertGen] 
+ALTER VIEW [dbo].[vw_DataCallQuestionInsertGen] 
 AS
    
   SELECT   
@@ -58,14 +58,11 @@ AS
 		'N''' +  help_text  + ''''  
 	END   + 
 	
-')'  STMT
+') /* ORIGIN[' + CONVERT(varchar, PK_Question  ) + '] */'
+AS STMT
   
 FROM fsma_Questions Q    
- 
-
-
-
-
+  
  
 GO
 

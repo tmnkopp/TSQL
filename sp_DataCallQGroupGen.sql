@@ -18,7 +18,7 @@ GO
 -- =============================================
 --USAGE
 
-EXEC sp_DataCallQGroupGen @PK_FORM='2009-A-SAO'
+EXEC sp_DataCallQGroupGen @PKQG =  900
 
 -- =============================================
  DROP PROCEDURE sp_DataCallQGroupGen
@@ -34,13 +34,12 @@ EXEC sp_DataCallQGroupGen @PK_FORM='2009-A-SAO'
 
 */
   	  
-ALTER PROCEDURE sp_DataCallQGroupGen	 
-		@PK_FORM VARCHAR(155) = ''
+CREATE PROCEDURE sp_DataCallQGroupGen	 
+		 @PKQG INT = 0
 AS
 BEGIN
 
-	DECLARE @PKQ INT 
-	DECLARE @PKQG INT 
+	DECLARE @PKQ INT  
 	DECLARE @IDENTIFIER_TEXT VARCHAR(55)  
 	DECLARE @QGTEXT VARCHAR(255) 
  			
@@ -52,14 +51,13 @@ BEGIN
 	FROM fsma_Questions	Q
 		LEFT OUTER JOIN fsma_QuestionGroups  QG
 		ON 	QG.PK_QuestionGroup =  Q.FK_QuestionGroup   
-	WHERE PK_FORM  IN (@PK_FORM) 
+	WHERE QG.PK_QuestionGroup IN ( @PKQG ) 
 
 	OPEN Q_CURSOR 
 	FETCH NEXT FROM Q_CURSOR INTO @PKQ, @PKQG, @IDENTIFIER_TEXT, @QGTEXT  
 
 	WHILE @@FETCH_STATUS = 0  
 	BEGIN
-		
 		UNION ALL  
 		EXEC sp_DataCallQuestionInsertGen 
 		@PK_QUESTION_GROUP=@PKQG  
