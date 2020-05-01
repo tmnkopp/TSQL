@@ -1,4 +1,4 @@
-DECLARE @TABLENAME VARCHAR(55) = 'Lenders'
+DECLARE @TABLENAME VARCHAR(55) = 'LENDERS'
 
 SELECT 'public class ' + @TABLENAME + '{ [fields] }' 
 Select  
