@@ -85,7 +85,7 @@ BEGIN
 	SET @Rn=@Rn+1
 END   
 PRINT @EXEC
-EXECUTE sp_executesql @EXEC
+--EXECUTE sp_executesql @EXEC
  
 IF @TKEY = 0 BEGIN 
 	SELECT * FROM @AUDITROWS
