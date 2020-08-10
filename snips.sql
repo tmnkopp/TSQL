@@ -1,10 +1,13 @@
 --snippet{"name":"cols from info schema", "category":"sql"}
 
-IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_SPROC' AND type = 'P')
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_SPROC' AND TYPE = 'P')
     DROP PROCEDURE sp_SPROC
 GO  
-IF EXISTS (SELECT * FROM sysobjects WHERE name = 'vw_VIEW' AND type = 'V')
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'vw_VIEW' AND TYPE = 'V')
     DROP VIEW vw_VIEW
+GO 
+IF EXISTS (SELECT * FROM sys.objects WHERE OBJECT_ID = OBJECT_ID(N'[dbo].[fn_JSONtoTBL]') AND TYPE IN (N'FN', N'IF', N'TF', N'FS', N'FT')) 
+	DROP FUNCTION [dbo].[fn_JSONtoTBL]
 GO 
 
 DECLARE @COLS  AS NVARCHAR(MAX)=''; 

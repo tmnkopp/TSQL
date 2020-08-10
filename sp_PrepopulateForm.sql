@@ -2,7 +2,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_PrePopulateFormLookup' AND 
     DROP PROCEDURE sp_PrePopulateFormLookup
 GO  
 CREATE PROCEDURE sp_PrePopulateFormLookup 
-  @PK_FORM_FROM NVARCHAR(15) = '2019-A-IG' 
+  @PK_FORM_FROM NVARCHAR(15) = '2019-Q3-CIO' 
 , @PK_FORM_TO NVARCHAR(15) = '' 
 , @ACRONYM NVARCHAR(15) = ''  
 AS
