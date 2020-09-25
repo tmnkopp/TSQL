@@ -17,7 +17,9 @@ BEGIN
 		DECLARE @MaskFormulas TABLE (IDX INT IDENTITY(1,1), ProviderCode NVARCHAR(255), FormulaType NVARCHAR(255), ReplaceRegex NVARCHAR(255), MaskChar NVARCHAR(2), MaskExpression NVARCHAR(4000))
 		INSERT INTO @MaskFormulas(ProviderCode, FormulaType, ReplaceRegex, MaskChar, MaskExpression ) VALUES  
 			('IPADDRESS', 'REGEX' , '\d', '*'
-				, '^\d{1,3}\.\d{1,3}\.(\d{1,3}\.\d{1,3})$') 	 
+				, '^(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}$') 
+		,	('IPADDRESSPOST', 'REGEX' , '\d', '*'
+				, '^\d{3}\-\d{2}\-(\d{4})$')  						 
 		,	('SSNPOST', 'REGEX' , '\d', '*'
 				, '^\d{3}\-\d{2}\-(\d{4})$')  						
 		,	('SSN', 'REGEX' , '\d', '*'
@@ -25,7 +27,13 @@ BEGIN
 		,	('DIGITMASK', 'REGEX' , '\d', '*'
 				, '^(.*)$') 	
 		,	('ALPHANUMERICMASK', 'REGEX' , '\d|\w', '*'
-				, '^(.*)$') 												
+				, '^(.*)$') 
+		,	('CIDR', 'REGEX' , '\d|\w', '*'
+				, '^\d*(.*)$') 		
+		,	('RevealPre3', 'REGEX' , '\d|\w', '*'
+				, '^.{3}(.*)$') 	
+		,	('RevealPost3', 'REGEX' , '\d|\w', '*'
+				, '^(.*).{3}$') 																						
 		SELECT ProviderCode, FormulaType, ReplaceRegex, MaskChar, MaskExpression  FROM @MaskFormulas 
 	END
 
