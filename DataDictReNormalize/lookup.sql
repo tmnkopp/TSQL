@@ -1,6 +1,15 @@
 SELECT 
  PK_AuditLog, TableName, PK_PrimeKey, FieldName, FieldValue, Change_Date
  FROM AuditLog
+WHERE TableName IN( 'fsma_Milestones'  )
+-- AND FieldName LIKE '%PK_%'
+ORDER BY Change_Date DESC
+
+RETURN; 
+
+SELECT 
+ PK_AuditLog, TableName, PK_PrimeKey, FieldName, FieldValue, Change_Date
+ FROM AuditLog
 WHERE TableName IN( 'fsma_POAMS'  )
 -- AND FieldName LIKE '%PK_%'
 ORDER BY Change_Date DESC
