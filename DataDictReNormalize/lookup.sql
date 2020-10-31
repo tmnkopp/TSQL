@@ -1,7 +1,11 @@
+exec cq_HVAPOAMs @PK_Component=N'109',@PK_Bureau=N'-10',@PK_HVA=N'111',@poamsubmissiondate=N'2020-10-11',@UserID=0
+
+
+RETURN ; 
 SELECT 
  PK_AuditLog, TableName, PK_PrimeKey, FieldName, FieldValue, Change_Date
  FROM AuditLog
-WHERE TableName IN( 'fsma_Milestones'  )
+WHERE TableName IN( 'fsma_Activities'  )
 -- AND FieldName LIKE '%PK_%'
 ORDER BY Change_Date DESC
 

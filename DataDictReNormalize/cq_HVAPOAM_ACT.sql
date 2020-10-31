@@ -3,14 +3,14 @@
 	DECLARE @PK_HVA INT = 30 -- 111 -- 
 	DECLARE @PK_POAM INT = 18  
 	DECLARE @PK_Bureau INT = 0
-	DECLARE @POAMSubmissionDate DATE =  CONVERT(NVARCHAR(10), '10-10-2020', 121)  --  '10-08-2020' --  10-08-2020 SET THIS TO DATE SUBMITTED, USE CURRENT DATE FOR PERFORMANCE TESTING 
+	DECLARE @POAMSubmissionDate DATE =  CONVERT(NVARCHAR(10), '10-12-2020', 121)  --  '10-08-2020' --  10-08-2020 SET THIS TO DATE SUBMITTED, USE CURRENT DATE FOR PERFORMANCE TESTING 
 	DECLARE @GETDATE DATE = CONVERT(NVARCHAR(10), GETDATE() , 121)
 	DECLARE @AssmtSource NVARCHAR(15) = 'RVA'  
 	DECLARE @POAMSTAT NVARCHAR(15) = 'IP'   
 	DECLARE @SubmissionDate As DATE = @POAMSubmissionDate  
 	IF @SubmissionDate IS NULL OR @SubmissionDate='' SET @SubmissionDate=@GETDATE
 	
-	IF OBJECT_ID('tempdb..#RESULTS_VIEW') IS NOT NULL DROP TABLE #RESULTS_VIEW  
+ 	IF OBJECT_ID('tempdb..#RESULTS_VIEW') IS NOT NULL DROP TABLE #RESULTS_VIEW  
 	SELECT * INTO #RESULTS_VIEW FROM  
 	(	SELECT  
 		  AGENCY.Component AGENCY
@@ -26,10 +26,15 @@
 		, POAM.AgRecievedDate 
 		, MS.Title MSTitle
 		, (SELECT DisplayValue FROM PickLists WHERE PK_PickList=MS.Status) MSStatus
+		, ACT.Description
+		, (SELECT DisplayValue FROM PickLists WHERE PK_PickList=ACT.Status) ACTStatus
 		FROM  fsma_POAMS POAM 
 		INNER JOIN (
 			SELECT MS.PK_Milestone, MS.Title, MS.Status, FK_PK_POAM FROM fsma_Milestones MS 
 		) MS ON MS.FK_PK_POAM = POAM.PK_POAM  
+		INNER JOIN (
+			SELECT ACT.PK_Activity, ACT.Description, ACT.Status, FK_PK_Milestone FROM fsma_Activities ACT 
+		) ACT ON ACT.FK_PK_Milestone = MS.PK_Milestone 
 		LEFT JOIN fsma_HVAs HVA ON HVA.PK_HVA = POAM.FK_PK_HVA 
 		INNER JOIN (
 			SELECT PK_HVA, AG.PK_Component PK_Agency, AG.Component
@@ -49,15 +54,15 @@
 		AND POAM.isActive = 1 
 		AND POAM.PK_POAM=@PK_POAM 
 	) RESULTS_CURRENT
-	--SELECT * FROM #RESULTS_VIEW 
+ 
 	IF @SubmissionDate <> @GETDATE 
-	BEGIN 
+	BEGIN  
 		DELETE FROM #RESULTS_VIEW
 		IF OBJECT_ID('tempdb..#AUDITVIEW') IS NOT NULL DROP TABLE #AUDITVIEW
 		SELECT * INTO #AUDITVIEW FROM(
 			SELECT AuditLog.PK_AuditLog, AuditLog.TABLENAME, CONVERT(NVARCHAR(255), LEFT(AuditLog.FieldName,255)) FieldName, AuditLog.FieldValue, AuditLog.PK_PrimeKey, AuditLog.CHANGE_DATE 
 			FROM AuditLog 
-			WHERE TABLENAME IN('fsma_POAMS', 'fsma_Milestones') AND EditType <> 'D' 
+			WHERE TABLENAME IN('fsma_POAMS', 'fsma_Milestones', 'fsma_Activities') AND EditType <> 'D' 
 			AND CHANGE_DATE > DATEADD(MONTH, -6, @SubmissionDate) AND CHANGE_DATE < DATEADD(DAY, 1, @SubmissionDate) 
 			AND FieldValue IS NOT NULL
 		)	AUDITVIEW 
@@ -132,26 +137,48 @@
 			) MAXDATE ON MAXDATE.FieldName=MS_AUDITS.FieldName
 				AND MAXDATE.CHANGE_DATE=MS_AUDITS.CHANGE_DATE
 				AND MAXDATE.PK_PrimeKey=MS_AUDITS.PK_PrimeKey 
-		),POAM_PIVOT AS( 
-			SELECT AGENCY, BUREAU, PK_BUREAU, HVA [SystemName], FK_PK_POAM PK_POAM, POAM_PIVOT.[Status],[RiskCat],[RiskFactor],[AssmtSource],[AssmtFinding] Finding,[AgRecievedDate] 
-				,MS_PIVOT.[Title] [MSTitle]
-				,(SELECT DisplayValue FROM PickLists WHERE PK_PickList = CONVERT(INT,[StatusDisplay])) [MSStatus]
-			FROM (
-				SELECT PK_PrimeKey, FieldValue, FieldName 
-				FROM MS_SUBMISSIONLOG 
-				) P PIVOT (
-				MAX(FieldValue) FOR FieldName IN ([StatusDisplay],[Title])
-			) MS_PIVOT
-			INNER JOIN fsma_Milestones ON fsma_Milestones.PK_Milestone=PK_PrimeKey
+		),ACT_AUDITS AS (
+			SELECT #AUDITVIEW.PK_PrimeKey, #AUDITVIEW.PK_AuditLog, FieldValue, #AUDITVIEW.FieldName FieldName, #AUDITFLAT.CHANGE_DATE 
+			FROM #AUDITVIEW INNER JOIN #AUDITFLAT ON #AUDITFLAT.PK_AuditLog=#AUDITVIEW.PK_AuditLog  
+			WHERE #AUDITVIEW.TableName='fsma_Activities'  
+		),ACT_SUBMISSIONLOG AS (
+			SELECT ACT_AUDITS.PK_PrimeKey, ACT_AUDITS.CHANGE_DATE [SUBMISSION_DATE], ACT_AUDITS.FieldValue, ACT_AUDITS.FieldName 
+			FROM ACT_AUDITS  
 			INNER JOIN (
+				SELECT MAX(CHANGE_DATE) CHANGE_DATE, PK_PrimeKey, FieldName 
+				FROM ACT_AUDITS GROUP BY PK_PrimeKey, FieldName  
+			) MAXDATE ON MAXDATE.FieldName=ACT_AUDITS.FieldName
+				AND MAXDATE.CHANGE_DATE=ACT_AUDITS.CHANGE_DATE
+				AND MAXDATE.PK_PrimeKey=ACT_AUDITS.PK_PrimeKey 
+		),POAM_PIVOT AS( 
+			SELECT AGENCY, BUREAU, PK_BUREAU, HVA [SystemName], POAM_PIVOT.PK_PrimeKey PK_POAM, POAM_PIVOT.[Status],[RiskCat],[RiskFactor],[AssmtSource],[AssmtFinding] Finding,[AgRecievedDate] 
+			--,fsma_Activities.FK_PK_Milestone ,fsma_Activities.PK_Activity 
+			,MS_PIVOT.[Title] [MSTitle]
+			,(SELECT DisplayValue FROM PickLists WHERE PK_PickList = CONVERT(INT,MS_PIVOT.[StatusDisplay])) [MSStatus]
+			,ACT_PIVOT.[Description] [Description]
+			,(SELECT DisplayValue FROM PickLists WHERE PK_PickList = CONVERT(INT,ACT_PIVOT.[StatusDisplay])) [ACTStatus]
+			FROM (
 				SELECT * FROM (
 					SELECT AGENCY, BUREAU, PK_BUREAU, HVA, PK_PrimeKey, FieldValue, FieldName 
 					FROM POAM_SUBMISSION_VIEW 
-				) P PIVOT (
-				MAX(FieldValue) FOR FieldName IN ([Status],[RiskCat],[RiskFactor],[AssmtSource],[AssmtFinding],[AgRecievedDate])
-				) POAMRESULTS  
-			)POAM_PIVOT ON fsma_Milestones.FK_PK_POAM=POAM_PIVOT.PK_PrimeKey
-		) 
+				) P PIVOT ( MAX(FieldValue) FOR FieldName IN ([Status],[RiskCat],[RiskFactor],[AssmtSource],[AssmtFinding],[AgRecievedDate])
+				) POAM_PIVOT
+			) POAM_PIVOT
+			INNER JOIN fsma_Milestones ON fsma_Milestones.FK_PK_POAM=POAM_PIVOT.PK_PrimeKey
+			INNER JOIN fsma_Activities ON fsma_Activities.FK_PK_Milestone=fsma_Milestones.PK_Milestone
+			INNER JOIN(
+				SELECT * FROM (
+					SELECT PK_PrimeKey, FieldValue, FieldName FROM MS_SUBMISSIONLOG 
+				) P PIVOT ( MAX(FieldValue) FOR FieldName IN ([StatusDisplay],[Title])
+				) MS_PIVOT  
+			) MS_PIVOT ON MS_PIVOT.PK_PrimeKey=fsma_Milestones.PK_Milestone
+			INNER JOIN(
+				SELECT * FROM (
+					SELECT PK_PrimeKey, FieldValue, FieldName FROM ACT_SUBMISSIONLOG 
+				) P PIVOT ( MAX(FieldValue) FOR FieldName IN ([StatusDisplay],[Description])
+				) ACT_PIVOT  
+			) ACT_PIVOT ON ACT_PIVOT.PK_PrimeKey=fsma_Activities.PK_Activity
+		)
  		INSERT INTO #RESULTS_VIEW 
 		SELECT * FROM POAM_PIVOT 
 	END  
@@ -181,5 +208,5 @@
 			DELETE FROM #RESULTS_VIEW WHERE PK_BUREAU > -1 
 		END	 
 	END 
-	SELECT AGENCY, BUREAU, SystemName, [Status],[RiskCat],[RiskFactor],[AssmtSource],[Finding],[AgRecievedDate],[MSTitle],[MSStatus] FROM #RESULTS_VIEW  
+	SELECT AGENCY, BUREAU, SystemName, [Status],[RiskCat],[RiskFactor],[AssmtSource],[Finding],[AgRecievedDate],[MSTitle],[MSStatus],Description,ACTStatus FROM #RESULTS_VIEW  
  
