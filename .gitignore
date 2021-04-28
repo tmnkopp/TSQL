@@ -1,0 +1,5 @@
+cs_*.sql
+config.*
+config/
+CyberScope/
+CS/
