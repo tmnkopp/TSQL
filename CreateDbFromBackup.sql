@@ -30,7 +30,7 @@ GO
 ALTER DATABASE [CyberScopeLite] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
 ALTER DATABASE [CyberScopeLite] SET MULTI_USER
 GO
-USE [CyberScopeLite] -- [CyberScope123] --  
+USE [CyberScope123] --  [CyberScopeLite] -- 
 IF OBJECT_ID('tempdb..#StmtProvider') IS NOT NULL DROP TABLE #StmtProvider 
 CREATE TABLE #StmtProvider (ROWID INT IDENTITY (1, 1), STMT NVARCHAR(4000) )    
 ;WITH dbschema AS
@@ -54,9 +54,11 @@ CREATE TABLE #StmtProvider (ROWID INT IDENTITY (1, 1), STMT NVARCHAR(4000) )
 -- SELECT * FROM dbschema ORDER BY TotalSpaceMB DESC 
 INSERT INTO #StmtProvider(STMT)
 SELECT 
-CASE WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'    THEN
+CASE WHEN TableName LIKE '%AuditLog%' THEN
+	'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 100000 FROM [' +TableName+ '])'
+WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'    THEN
 	'TRUNCATE TABLE [' +TableName+ ']'
-WHEN TableName LIKE '%AuditLog%' OR TableName LIKE '%BACKUP%'   THEN
+WHEN TableName LIKE '%BACKUP%'   THEN
 	'TRUNCATE TABLE [' +TableName+ ']'
 ELSE
 	'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 100000 FROM [' +TableName+ '])'
