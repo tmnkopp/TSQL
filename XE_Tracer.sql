@@ -7,16 +7,20 @@ CREATE EVENT SESSION [Tracer] ON SERVER
 	( 
 		ACTION(sqlserver.sql_text)
 		WHERE (
-			   [sqlserver].[like_i_sql_unicode_string]([sqlserver].[sql_text], N'%Artifact%')  
-			OR [sqlserver].[like_i_sql_unicode_string]([sqlserver].[sql_text], N'%Audit%')  
+			  [sqlserver].[like_i_sql_unicode_string]([sqlserver].[sql_text], N'%OMBHome%')  
 		)
-	)  
+	), ADD EVENT sqlserver.rpc_completed
+	( 
+		ACTION(sqlserver.statement)
+		WHERE (
+			  [sqlserver].[like_i_sql_unicode_string]([sqlserver].[sql_text], N'%OMBHome%')  
+		)
+	)   	 
 	, ADD EVENT sqlserver.sql_statement_completed
     ( 
         ACTION(sqlserver.sql_text)
         WHERE ( 
-			   [sqlserver].[like_i_sql_unicode_string]([sqlserver].[sql_text], N'%Artifact%')  
-			OR [sqlserver].[like_i_sql_unicode_string]([sqlserver].[sql_text], N'%Audit%')  
+			 [sqlserver].[like_i_sql_unicode_string]([sqlserver].[sql_text], N'%OMBHome%')  
 		)
     )
 	ADD TARGET package0.event_file(SET filename=N'C:\temp\Tracer.xel',max_file_size=(50))
