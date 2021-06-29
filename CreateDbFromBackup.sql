@@ -30,40 +30,42 @@ GO
 ALTER DATABASE [CyberScopeLite] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
 ALTER DATABASE [CyberScopeLite] SET MULTI_USER
 GO
-USE [CyberScope123] --  [CyberScopeLite] -- 
-IF OBJECT_ID('tempdb..#StmtProvider') IS NOT NULL DROP TABLE #StmtProvider 
-CREATE TABLE #StmtProvider (ROWID INT IDENTITY (1, 1), STMT NVARCHAR(4000) )    
-;WITH dbschema AS
-(
+
+	USE [CyberScope123] --  [CyberScopeLite] -- 
+	IF OBJECT_ID('tempdb..#StmtProvider') IS NOT NULL DROP TABLE #StmtProvider 
+	CREATE TABLE #StmtProvider (ROWID INT IDENTITY (1, 1), STMT NVARCHAR(4000) )    
+	;WITH dbschema AS
+	(
+		SELECT 
+			t.name AS TableName, 
+			i.name As indexName, 
+			cols.COLUMN_NAME As PK,
+			sum(p.rows) as RowCounts, 
+			(sum(a.total_pages) * 8) / 1024 as TotalSpaceMB, 
+			(sum(a.used_pages) * 8) / 1024 as UsedSpaceMB, 
+			(sum(a.data_pages) * 8) / 1024 as DataSpaceMB
+		FROM  sys.tables t
+		INNER JOIN INFORMATION_SCHEMA.COLUMNS cols ON cols.TABLE_NAME = t.name ANd cols.ORDINAL_POSITION = 1
+		INNER JOIN sys.indexes i ON t.object_id = i.object_id
+		INNER JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
+		INNER JOIN sys.allocation_units a ON p.partition_id = a.container_id
+		WHERE t.name NOT LIKE 'dt%' AND i.object_id > 255 AND i.index_id <= 1
+		GROUP BY  t.name, i.object_id, i.index_id, i.name , cols.COLUMN_NAME 
+	) 
+	-- SELECT * FROM dbschema ORDER BY TotalSpaceMB DESC  
+	INSERT INTO #StmtProvider(STMT)
 	SELECT 
-		t.name AS TableName, 
-		i.name As indexName, 
-		cols.COLUMN_NAME As PK,
-		sum(p.rows) as RowCounts, 
-		(sum(a.total_pages) * 8) / 1024 as TotalSpaceMB, 
-		(sum(a.used_pages) * 8) / 1024 as UsedSpaceMB, 
-		(sum(a.data_pages) * 8) / 1024 as DataSpaceMB
-	FROM  sys.tables t
-	INNER JOIN INFORMATION_SCHEMA.COLUMNS cols ON cols.TABLE_NAME = t.name ANd cols.ORDINAL_POSITION = 1
-	INNER JOIN sys.indexes i ON t.object_id = i.object_id
-	INNER JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
-	INNER JOIN sys.allocation_units a ON p.partition_id = a.container_id
-	WHERE t.name NOT LIKE 'dt%' AND i.object_id > 255 AND i.index_id <= 1
-	GROUP BY  t.name, i.object_id, i.index_id, i.name , cols.COLUMN_NAME 
-) 
--- SELECT * FROM dbschema ORDER BY TotalSpaceMB DESC 
-INSERT INTO #StmtProvider(STMT)
-SELECT 
-CASE WHEN TableName LIKE '%AuditLog%' THEN
-	'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 100000 FROM [' +TableName+ '])'
-WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'    THEN
-	'TRUNCATE TABLE [' +TableName+ ']'
-WHEN TableName LIKE '%BACKUP%'   THEN
-	'TRUNCATE TABLE [' +TableName+ ']'
-ELSE
-	'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 100000 FROM [' +TableName+ '])'
-END STMT FROM dbschema WHERE UsedSpaceMB > 1 
-SELECT * FROM #StmtProvider  
+	CASE WHEN TableName LIKE '%AuditLog%' THEN
+		'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 10000 FROM [' +TableName+ '])'
+	WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'    THEN
+		'TRUNCATE TABLE [' +TableName+ ']'
+	WHEN TableName LIKE '%BACKUP%'   THEN
+		'TRUNCATE TABLE [' +TableName+ ']'
+	ELSE
+		'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 10000 FROM [' +TableName+ '])'
+	END STMT FROM dbschema WHERE UsedSpaceMB > 15 
+	SELECT * FROM #StmtProvider  
+ 
 DECLARE @RowCnt INT = 1 
 DECLARE @MaxRows INT =(SELECT COUNT(*) FROM #StmtProvider)
 WHILE @RowCnt <= @MaxRows
