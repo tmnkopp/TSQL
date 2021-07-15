@@ -7,6 +7,7 @@ BEGIN
 	DROP DATABASE [CyberScopeLite]
 END 
 GO
+
 CREATE DATABASE [CyberScopeLite]
  CONTAINMENT = NONE
  ON  PRIMARY 
@@ -21,6 +22,7 @@ GO
 ALTER DATABASE [CyberScopeLite] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
 ALTER DATABASE [CyberScopeLite] SET MULTI_USER
 GO
+
 USE [master]
 RESTORE DATABASE [CyberScopeLite] FROM  DISK = N'C:\Program Files\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQL\Backup\CyberScope123.bak' WITH  FILE = 1, 
  MOVE N'CyberScorecard' TO N'C:\Program Files\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQL\DATA\CyberScopeLite.mdf', 
@@ -63,7 +65,7 @@ GO
 		'TRUNCATE TABLE [' +TableName+ ']'
 	ELSE
 		'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 10000 FROM [' +TableName+ '])'
-	END STMT FROM dbschema WHERE UsedSpaceMB > 15 
+	END STMT FROM dbschema WHERE UsedSpaceMB > 4 
 	SELECT * FROM #StmtProvider  
  
 DECLARE @RowCnt INT = 1 
@@ -80,6 +82,7 @@ BEGIN
 	SET @RowCnt = @RowCnt + 1 
 END  
 GO 
+
 USE [CyberScopeLite]
 GO
 DBCC SHRINKFILE (N'CyberScorecard_log' , 0, TRUNCATEONLY) 
