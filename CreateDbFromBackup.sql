@@ -32,7 +32,7 @@ GO
 ALTER DATABASE [CyberScopeLite] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
 ALTER DATABASE [CyberScopeLite] SET MULTI_USER
 GO
-
+	SET NOCOUNT ON;
 	USE [CyberScope123] --  [CyberScopeLite] -- 
 	IF OBJECT_ID('tempdb..#StmtProvider') IS NOT NULL DROP TABLE #StmtProvider 
 	CREATE TABLE #StmtProvider (ROWID INT IDENTITY (1, 1), STMT NVARCHAR(4000) )    
@@ -43,9 +43,7 @@ GO
 			i.name As indexName, 
 			cols.COLUMN_NAME As PK,
 			sum(p.rows) as RowCounts, 
-			(sum(a.total_pages) * 8) / 1024 as TotalSpaceMB, 
-			(sum(a.used_pages) * 8) / 1024 as UsedSpaceMB, 
-			(sum(a.data_pages) * 8) / 1024 as DataSpaceMB
+			(sum(a.total_pages) * 8) / 1024 as TotalSpaceMB 
 		FROM  sys.tables t
 		INNER JOIN INFORMATION_SCHEMA.COLUMNS cols ON cols.TABLE_NAME = t.name ANd cols.ORDINAL_POSITION = 1
 		INNER JOIN sys.indexes i ON t.object_id = i.object_id
@@ -57,31 +55,31 @@ GO
 	-- SELECT * FROM dbschema ORDER BY TotalSpaceMB DESC  
 	INSERT INTO #StmtProvider(STMT)
 	SELECT 
-	CASE WHEN TableName LIKE '%AuditLog%' THEN
-		'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 10000 FROM [' +TableName+ '])'
-	WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'    THEN
-		'TRUNCATE TABLE [' +TableName+ ']'
+	CASE 
 	WHEN TableName LIKE '%BACKUP%'   THEN
 		'TRUNCATE TABLE [' +TableName+ ']'
+	WHEN TableName LIKE '%AuditLog%' THEN
+		'-- DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
+	WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'    THEN
+		'TRUNCATE TABLE [' +TableName+ ']' 
 	ELSE
-		'-- DELETE FROM [' +TableName+ '] WHERE ' + PK +  ' > (SELECT MAX('+PK+') - 10000 FROM [' +TableName+ '])'
-	END STMT FROM dbschema WHERE UsedSpaceMB > 4 
-	SELECT * FROM #StmtProvider  
- 
-DECLARE @RowCnt INT = 1 
-DECLARE @MaxRows INT =(SELECT COUNT(*) FROM #StmtProvider)
-WHILE @RowCnt <= @MaxRows
-BEGIN  
-	DECLARE @EXE NVARCHAR(MAX) = (SELECT ISNULL(STMT, '0') FROM #StmtProvider WHERE ROWID = @RowCnt) + ';'    
-	BEGIN TRY       
-		PRINT @EXE    --  EXECUTE sp_executesql @EXE             
-	END TRY  
-	BEGIN CATCH   
-		PRINT ' err '+ @EXE
-	END CATCH   
-	SET @RowCnt = @RowCnt + 1 
-END  
-GO 
+		'-- DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
+	END STMT FROM dbschema WHERE TotalSpaceMB > 4 
+	  
+	DECLARE @RowCnt INT = 1 
+	DECLARE @MaxRows INT =(SELECT COUNT(*) FROM #StmtProvider)
+	WHILE @RowCnt <= @MaxRows
+	BEGIN  
+		DECLARE @EXE NVARCHAR(MAX) = (SELECT ISNULL(STMT, '0') FROM #StmtProvider WHERE ROWID = @RowCnt) + ';'    
+		BEGIN TRY       
+			PRINT @EXE    --  EXECUTE sp_executesql @EXE             
+		END TRY  
+		BEGIN CATCH   
+			PRINT ' err '+ @EXE
+		END CATCH   
+		SET @RowCnt = @RowCnt + 1 
+	END  
+	GO 
 
 USE [CyberScopeLite]
 GO
