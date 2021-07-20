@@ -10,10 +10,8 @@ GO
 
 CREATE DATABASE [CyberScopeLite]
 	 CONTAINMENT = NONE
-	 ON PRIMARY 
-	( NAME = N'CyberScopeLite', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQL\DATA\CyberScopeLite.mdf' , SIZE = 1048576KB , FILEGROWTH = 262144KB )
-	 LOG ON 
-	( NAME = N'CyberScopeLite_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQL\DATA\CyberScopeLite_log.ldf' , SIZE = 524288KB , FILEGROWTH = 131072KB )
+	 ON PRIMARY ( NAME = N'CyberScopeLite', FILENAME = N'D:\DATA\CyberScopeLite.mdf' , SIZE = 1048576KB , FILEGROWTH = 262144KB )
+	 LOG ON ( NAME = N'CyberScopeLite_log', FILENAME = N'D:\DATA\CyberScopeLite_log.ldf' , SIZE = 524288KB , FILEGROWTH = 131072KB )
 GO  
 	ALTER DATABASE [CyberScopeLite] SET RECOVERY SIMPLE WITH NO_WAIT
 GO 
@@ -26,8 +24,8 @@ GO
 USE [master]
 RESTORE DATABASE [CyberScopeLite] FROM  
 	DISK = N'D:\Backup\CyberScope.bak' WITH  FILE = 1, 
-	MOVE N'CyberScorecard' TO N'C:\Program Files\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQL\DATA\CyberScopeLite.mdf', 
-	MOVE N'CyberScorecard_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQL\DATA\CyberScopeLite.ldf',  NORECOVERY,  NOUNLOAD,  REPLACE,  STATS = 5
+	MOVE N'CyberScorecard' TO N'D:\DATA\CyberScopeLite.mdf', 
+	MOVE N'CyberScorecard_log' TO N'D:\DATA\CyberScopeLite.ldf',  NORECOVERY,  NOUNLOAD,  REPLACE,  STATS = 5
 	RESTORE DATABASE [CyberScopeLite] WITH RECOVERY
 GO 
 	ALTER DATABASE [CyberScopeLite] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
@@ -65,7 +63,7 @@ GO
 		'TRUNCATE TABLE [' +TableName+ ']' 
 	ELSE
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
-	END STMT FROM dbschema WHERE TotalSpaceMB > 4 
+	END STMT FROM dbschema WHERE TotalSpaceMB > 1 
 	  
 	DECLARE @RowCnt INT = 1 
 	DECLARE @MaxRows INT =(SELECT COUNT(*) FROM #StmtProvider)
@@ -73,7 +71,7 @@ GO
 	BEGIN  
 		DECLARE @EXE NVARCHAR(MAX) = (SELECT ISNULL(STMT, '0') FROM #StmtProvider WHERE ROWID = @RowCnt) + ';'    
 		BEGIN TRY       
-			EXECUTE sp_executesql @EXE  -- PRINT @EXE    --             
+			PRINT @EXE    --  EXECUTE sp_executesql @EXE  --            
 		END TRY  
 		BEGIN CATCH   
 			PRINT ' err '+ @EXE
@@ -82,8 +80,7 @@ GO
 	END   
 GO 
 
-USE [CyberScopeLite]
-GO
+USE [CyberScopeLite] 
 	DBCC SHRINKFILE (N'CyberScorecard_log' , 0, TRUNCATEONLY) 
 GO
 	DBCC SHRINKDATABASE(N'CyberScopeLite' )
@@ -93,4 +90,4 @@ GO
 GO
 	BACKUP DATABASE [CyberScopeLite] TO  DISK = N'D:\Backup\CyberScopeLite.bak' WITH  DIFFERENTIAL ,NOFORMAT, NOINIT,  
 	NAME = N'CyberScopeLite-DIFF Database Backup', SKIP, NOREWIND, NOUNLOAD,  STATS = 10
-GO
+GO 
