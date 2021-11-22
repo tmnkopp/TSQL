@@ -32,7 +32,7 @@ GO
 	ALTER DATABASE [CyberScopeLite] SET MULTI_USER
 GO
 	SET NOCOUNT ON;
-	USE [CyberScopeLite] -- [CyberScope123] --  
+	USE [CyberScopeLite] --  [CyberScope123] -- 
 	IF OBJECT_ID('tempdb..#StmtProvider') IS NOT NULL DROP TABLE #StmtProvider 
 	CREATE TABLE #StmtProvider (ROWID INT IDENTITY (1, 1), STMT NVARCHAR(4000) )    
 	;WITH dbschema AS
@@ -71,7 +71,7 @@ GO
 	BEGIN  
 		DECLARE @EXE NVARCHAR(MAX) = (SELECT ISNULL(STMT, '0') FROM #StmtProvider WHERE ROWID = @RowCnt) + ';'    
 		BEGIN TRY       
-			PRINT @EXE    --  EXECUTE sp_executesql @EXE  --            
+			 PRINT @EXE    --   EXECUTE sp_executesql @EXE  --          
 		END TRY  
 		BEGIN CATCH   
 			PRINT ' err '+ @EXE
