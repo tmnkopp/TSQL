@@ -70,8 +70,9 @@ GO
 	WHILE @RowCnt <= @MaxRows
 	BEGIN  
 		DECLARE @EXE NVARCHAR(MAX) = (SELECT ISNULL(STMT, '0') FROM #StmtProvider WHERE ROWID = @RowCnt) + ';'    
-		BEGIN TRY       
-			 PRINT @EXE    --   EXECUTE sp_executesql @EXE  --          
+		BEGIN TRY 
+			 EXECUTE sp_executesql @EXE       
+			 PRINT @EXE    --    --          
 		END TRY  
 		BEGIN CATCH   
 			PRINT ' err '+ @EXE
@@ -91,3 +92,5 @@ GO
 	BACKUP DATABASE [CyberScopeLite] TO  DISK = N'D:\Backup\CyberScopeLite.bak' WITH  DIFFERENTIAL ,NOFORMAT, NOINIT,  
 	NAME = N'CyberScopeLite-DIFF Database Backup', SKIP, NOREWIND, NOUNLOAD,  STATS = 10
 GO 
+
+ 
