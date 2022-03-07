@@ -31,6 +31,8 @@ GO
 	ALTER DATABASE [CyberScopeLite] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
 	ALTER DATABASE [CyberScopeLite] SET MULTI_USER
 GO
+USE [master]
+
 	SET NOCOUNT ON;
 	USE [CyberScopeLite] --  [CyberScope123] -- 
 	IF OBJECT_ID('tempdb..#StmtProvider') IS NOT NULL DROP TABLE #StmtProvider 
