@@ -34,7 +34,7 @@ GO
 USE [master]
 
 	SET NOCOUNT ON;
-	USE [CyberScopeLite] --  [CyberScope123] -- 
+	USE [CyberScopeLite] --  USE [CyberScope123] --  
 	IF OBJECT_ID('tempdb..#StmtProvider') IS NOT NULL DROP TABLE #StmtProvider 
 	CREATE TABLE #StmtProvider (ROWID INT IDENTITY (1, 1), STMT NVARCHAR(4000) )    
 	;WITH dbschema AS
@@ -74,7 +74,7 @@ USE [master]
 		DECLARE @EXE NVARCHAR(MAX) = (SELECT ISNULL(STMT, '0') FROM #StmtProvider WHERE ROWID = @RowCnt) + ';'    
 		BEGIN TRY 
 			 EXECUTE sp_executesql @EXE       
-			 PRINT @EXE    --    --          
+			 --  PRINT @EXE    --          
 		END TRY  
 		BEGIN CATCH   
 			PRINT ' err '+ @EXE
