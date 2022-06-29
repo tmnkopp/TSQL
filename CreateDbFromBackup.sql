@@ -63,6 +63,8 @@ USE [master]
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
 	WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'    THEN
 		'TRUNCATE TABLE [' +TableName+ ']' 
+	WHEN TableName LIKE 'fsma_%' OR TableName LIKE 'wf_%' THEN
+		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 50000 FROM [' +TableName+ '])'
 	ELSE
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
 	END STMT FROM dbschema WHERE TotalSpaceMB > 1 
