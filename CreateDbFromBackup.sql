@@ -67,7 +67,7 @@ USE [master]
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 50000 FROM [' +TableName+ '])'
 	ELSE
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
-	END STMT FROM dbschema WHERE TotalSpaceMB > 1 
+	END STMT FROM dbschema WHERE TotalSpaceMB > 4 
 	  
 	DECLARE @RowCnt INT = 1 
 	DECLARE @MaxRows INT =(SELECT COUNT(*) FROM #StmtProvider)
