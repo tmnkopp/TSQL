@@ -67,7 +67,7 @@ USE [master]
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 50000 FROM [' +TableName+ '])'
 	ELSE
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
-	END STMT FROM dbschema WHERE TotalSpaceMB > 4 
+	END STMT FROM dbschema WHERE TotalSpaceMB > 1 
 	  
 	DECLARE @RowCnt INT = 1 
 	DECLARE @MaxRows INT =(SELECT COUNT(*) FROM #StmtProvider)
@@ -75,8 +75,8 @@ USE [master]
 	BEGIN  
 		DECLARE @EXE NVARCHAR(MAX) = (SELECT ISNULL(STMT, '0') FROM #StmtProvider WHERE ROWID = @RowCnt) + ';'    
 		BEGIN TRY 
-			 EXECUTE sp_executesql @EXE       
-			 --  PRINT @EXE    --          
+			 --  EXECUTE sp_executesql @EXE       
+			  PRINT @EXE    --          
 		END TRY  
 		BEGIN CATCH   
 			PRINT ' err '+ @EXE
