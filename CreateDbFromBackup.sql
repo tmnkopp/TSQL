@@ -34,7 +34,7 @@ GO
 USE [master]
 
 	SET NOCOUNT ON;
-	USE [CyberScopeLite] --  USE [CyberScope123] --  
+	USE [CS101122] --  USE [CyberScope123] --  
 	IF OBJECT_ID('tempdb..#StmtProvider') IS NOT NULL DROP TABLE #StmtProvider 
 	CREATE TABLE #StmtProvider (ROWID INT IDENTITY (1, 1), STMT NVARCHAR(4000) )    
 	;WITH dbschema AS
