@@ -61,9 +61,9 @@ USE [master]
 		'TRUNCATE TABLE [' +TableName+ ']'
 	WHEN TableName LIKE '%AuditLog%' THEN
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
-	WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'    THEN
+	WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%' AND TableName NOT LIKE '%Artifacts%'    THEN
 		'TRUNCATE TABLE [' +TableName+ ']' 
-	WHEN TableName LIKE 'fsma_%' OR TableName LIKE 'wf_%' THEN
+	WHEN TableName LIKE 'fsma_%' OR TableName LIKE 'wf_%' OR TableName LIKE '%Artifacts%' THEN
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 50000 FROM [' +TableName+ '])'
 	ELSE
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
