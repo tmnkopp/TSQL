@@ -53,17 +53,19 @@ USE [master]
 		WHERE t.name NOT LIKE 'dt%' AND i.object_id > 255 AND i.index_id <= 1
 		GROUP BY  t.name, i.object_id, i.index_id, i.name , cols.COLUMN_NAME 
 	) 
-	-- SELECT * FROM dbschema ORDER BY TotalSpaceMB DESC  
+	SELECT * FROM dbschema ORDER BY TotalSpaceMB DESC  
 	INSERT INTO #StmtProvider(STMT)
 	SELECT 
 	CASE 
+	WHEN TableName LIKE 'Artifacts%' OR TableNAme LIKE '%fsma_NarrAnswers%'  THEN
+		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10 FROM [' +TableName+ '])'
 	WHEN TableName LIKE '%BACKUP%'   THEN
 		'TRUNCATE TABLE [' +TableName+ ']'
 	WHEN TableName LIKE '%AuditLog%' THEN
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
-	WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%' AND TableName NOT LIKE '%Artifacts%'    THEN
+	WHEN TableName NOT LIKE 'fsma_%' AND TableName NOT LIKE 'wf_%'      THEN
 		'TRUNCATE TABLE [' +TableName+ ']' 
-	WHEN TableName LIKE 'fsma_%' OR TableName LIKE 'wf_%' OR TableName LIKE '%Artifacts%' THEN
+	WHEN TableName LIKE 'fsma_%' OR TableName LIKE 'wf_%'  THEN
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 50000 FROM [' +TableName+ '])'
 	ELSE
 		' DELETE FROM [' +TableName+ '] WHERE [' + PK +  '] < (SELECT MAX(['+PK+']) - 10000 FROM [' +TableName+ '])'
